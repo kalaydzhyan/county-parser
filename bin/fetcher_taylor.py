@@ -1,39 +1,14 @@
 #!/usr/bin/python3
 
-import os, glob, json, time, requests, datetime, contextlib, argparse, sys, inspect
-from bs4 import BeautifulSoup
-import pandas as pd
-import numpy as np
+import os, time, requests, datetime, contextlib, argparse
+from cad_lib import isnotebook, ROOT_DIR
 
 HTTP_ATTEMPTS = 1000
-
-def get_script_dir(follow_symlinks=True):
-    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
-        path = os.path.abspath(sys.executable)
-    else:
-        path = inspect.getabsfile(get_script_dir)
-    if follow_symlinks:
-        path = os.path.realpath(path)
-    return os.path.dirname(path)
-
-def isnotebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
-        elif shell == 'TerminalInteractiveShell':
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
-    except NameError:
-        return False      # Probably standard Python interpreter
 
 if isnotebook():
     from tqdm.notebook import tqdm, trange
 else:
     from tqdm import tqdm, trange
-    
-''' Fetching files '''
 
 def get_headers(url='https://propaccess.taylor-cad.org/clientdb/?cid=1'):
     session         = requests.Session()
@@ -48,9 +23,8 @@ def get_headers(url='https://propaccess.taylor-cad.org/clientdb/?cid=1'):
 
 
 if __name__ == '__main__':
-    
-    WD          = f'{get_script_dir()}/../'
-    data_folder = f'{WD}/data/data_taylor'
+
+    data_folder = f'{ROOT_DIR}/data/data_taylor'
     
     os.makedirs(data_folder, exist_ok=True) 
     headers = get_headers()
