@@ -17,8 +17,8 @@ else:
     
 if __name__ == '__main__':
 
-    output_folder = f'{ROOT_DIR}/output'
-    os.makedirs(output_folder, exist_ok=True) 
+    output_dir = f'{ROOT_DIR}/output'
+    os.makedirs(output_dir, exist_ok=True) 
 
     total_list = []
     
