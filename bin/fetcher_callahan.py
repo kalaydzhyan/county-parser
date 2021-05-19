@@ -10,14 +10,13 @@ if __name__ == '__main__':
     
     today       = dt.datetime.today()
     months_list = pd.date_range(today - dt.timedelta(days=600), today, freq='MS').strftime("%Y/%m").tolist()
-
-    url_root = 'https://www.callahancad.org/wp-content/uploads/'
+    url_root    = 'https://www.callahancad.org/wp-content/uploads/'
 
     for month in reversed(months_list):
-        url = f'{url_root}{month}/'
-        response = requests.get(url)
-        href_lines = re.findall("<a href=[^>]*>", response.text)
-        filenames = [tag.strip(r'<a href="').strip(r'">"') for tag in href_lines]
+        url           = f'{url_root}{month}/'
+        response      = requests.get(url)
+        href_lines    = re.findall("<a href=[^>]*>", response.text)
+        filenames     = [tag.strip(r'<a href="').strip(r'">"') for tag in href_lines]
         tax_filenames = [fn for fn in filenames if re.match(".*tax.*\.zip", fn.lower())]
 
         if tax_filenames:
