@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-import os, glob, json, time, datetime, contextlib
+import os, glob, json, time, datetime, contextlib, platform
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
+import regex as re
 
 from cad_lib import isnotebook, ROOT_DIR
 
@@ -101,3 +102,12 @@ if __name__ == '__main__':
 
         df = pd.DataFrame(total_list)
         df.to_csv(f'{output_dir}/output_{CNTY_SFFX}.csv', index=False)
+
+        node_name = platform.node()
+        if re.match('ip\-\d+\-\d+\-\d+\-\d+\..*', node_name):
+            aws_dir = '/var/www/html/output'
+            os.makedirs(aws_dir, exist_ok=True) 
+            df.to_csv(f'{aws_dir}/output_{CNTY_SFFX}.csv', index=False)
+        
+
+        
