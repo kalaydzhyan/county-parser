@@ -47,10 +47,10 @@ def extract_name_address(string):
     return owner_name, owner_address
 
 def analyze_legal_description(string):
-    bad_items         = ['**', 'MAP NUM:', 'DIVIDED UNITS:', 'GEO QUAD:', 'ACRES:', 'AERIAL:'] 
+    bad_items         = ['**', 'MAP NUM:', 'DIVIDED UNITS:', 'GEO QUAD:', 'AERIAL:'] 
     delinquent        = '**' in string
     acres             = re.search('ACRES: [\d\.]*', string)
-    land_area         = float(acres[0][7:]) if acres else -1.0
+    land_area         = float(acres[0].split()[1].replace(',','')) if acres else -1.0
     idxs              = np.array([string.find(item) for item in bad_items])
     idxs              = idxs[idxs>=0]
     legal_description = string[:np.min(idxs)] if idxs.any() else string
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         lines       = [line.strip('\r') for line in lines]
         first_lines = [i for i, line in enumerate(lines) if ' ID:' in line]
         last_lines  = [i+2 for i, line in enumerate(lines) if '=====' in line]
-        ids         = [lines[i][11:21] for i in first_lines]
+        ids         = [lines[i].split()[0][3:] for i in first_lines]
         ranges      = list(zip(first_lines, last_lines))
 
         # dictionary of properties, keeping only real property
@@ -90,9 +90,12 @@ if __name__ == '__main__':
         for prop_id in properties:
             prop_data = properties[prop_id]
 
-            if '    ' not in prop_data[0][slice(*positions['OWNERSHIP'])]:
-                #fixing errors in pdf2ascii conversion
-                prop_data[0] = fix_padding(prop_data[0], move_from=positions['OWNERSHIP'][0]+29, move_to_tuple=positions['LEGAL DESCRIPTION']) 
+            #fixing errors in pdf2ascii conversion. Need to know all field sizes to run in a key loop...
+            if len(prop_data[0][slice(*positions['OWNERSHIP'])].strip())>=28:
+                prop_data[0] = fix_padding(prop_data[0], move_from=positions['OWNERSHIP'][0]+27, move_to_tuple=positions['LEGAL DESCRIPTION'])
+
+            if len(prop_data[0][slice(*positions['LEGAL DESCRIPTION'])].strip())>=49:
+                prop_data[0] = fix_padding(prop_data[0], move_from=positions['LEGAL DESCRIPTION'][0]+48, move_to_tuple=positions['EXEMPTIONS / ADDN CODING'])
 
             end_of_descr = [idx for idx, s in enumerate(prop_data) if 'YEAR TAXING ENTITIES' in s][0]
 
@@ -102,7 +105,13 @@ if __name__ == '__main__':
                 prop_description[key] = cell_to_line(prop_data, (0, end_of_descr), positions[key], delims=delims)
 
             accnt_id                  = prop_description['ACCOUNT IDENTIFICATION']
-            prop_address              = accnt_id[accnt_id.find('SITUS')+7:]
+            prop_address              = ''
+            
+            for inf_line in accnt_id.split(', '):
+                if inf_line.startswith('SITUS:'):
+                    prop_address = inf_line.split(': ')[1]
+                    break
+                
             owner_name, owner_address = extract_name_address(prop_description['OWNERSHIP'])
             absentee                  = 'HS' not in prop_description['EXEMPTIONS / ADDN CODING']
             legal_description, land_area, delinquent = analyze_legal_description(prop_description['LEGAL DESCRIPTION'])
