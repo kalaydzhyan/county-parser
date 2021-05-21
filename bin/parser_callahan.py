@@ -7,7 +7,7 @@ import pandas as pd
 from cad_lib import ROOT_DIR
 
 CNTY_SFFX   = 'callahan'
-EMPTY_LIMIT = 5000 # max improvement value to assume the land is empty
+EMPTY_LIMIT = 4000 # max improvement value to assume the land is empty
 
 def cell_to_line(array, rows, cols, delims=', '):
     strings         = [string[slice(*cols)].strip() for string in array[slice(*rows)]]
