@@ -4,10 +4,9 @@ import os, subprocess, glob, json, platform
 import regex as re
 import numpy as np
 import pandas as pd
-from cad_lib import ROOT_DIR
+from cad_lib import ROOT_DIR, EMPTY_LIMIT
 
 CNTY_SFFX   = 'callahan'
-EMPTY_LIMIT = 4000 # max improvement value to assume the land is empty
 
 def cell_to_line(array, rows, cols, delims=', '):
     strings         = [string[slice(*cols)].strip() for string in array[slice(*rows)]]

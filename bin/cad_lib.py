@@ -22,4 +22,4 @@ def isnotebook():
         return False      # Probably standard Python interpreter
     
 ROOT_DIR    = f'{get_script_dir()}/../'
- 
+EMPTY_LIMIT = 4000 # max improvement value to assume the land is empty 
