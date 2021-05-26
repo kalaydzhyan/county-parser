@@ -27,7 +27,7 @@ if __name__ == '__main__':
     os.makedirs(data_folder, exist_ok=True)
     
     for f in os.listdir(data_folder):
-        os.remove(f)
+        os.remove(f'{data_folder}/{f}')
     
     with tempfile.TemporaryFile() as tfile:
         response = requests.get(url_tax)
