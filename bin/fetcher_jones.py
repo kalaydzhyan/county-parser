@@ -4,7 +4,7 @@ import os, time, requests, datetime, contextlib, argparse, sys
 import regex as re
 import pandas as pd
 import numpy as np
-from cad_lib import isnotebook, ROOT_DIR
+from cad_lib import isnotebook, ROOT_DIR, FileLock
 
 HTTP_ATTEMPTS  = 1000
 CNTY_SFFX      = 'jones'
@@ -66,8 +66,10 @@ if __name__ == '__main__':
     url_appraisal_roll = url_appraisal_roll.replace('&amp;', '&')
     response           = requests.get(url_appraisal_roll)
     fname              = f'{data_dir}/appraisal_roll.xls'
-    with open(fname, 'wb') as f:
-                f.write(response.content)
+
+    with FileLock(fname) as f_lock: # preventing simultaneous dumping
+        with open(fname, 'wb') as f:
+            f.write(response.content)
             
     owner_ids, property_ids = jones_import_ids(fname)
     session_id              = generate_session_id()
@@ -84,7 +86,7 @@ if __name__ == '__main__':
             for trial in range(HTTP_ATTEMPTS):
                 response = requests.get(url)
 
-                if 'Welcome to the P&amp;A Website!' not in response.text:
+                if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
                     break
 
                 if trial==HTTP_ATTEMPTS-1:
@@ -112,7 +114,7 @@ if __name__ == '__main__':
             for trial in range(HTTP_ATTEMPTS):
                 response = requests.get(url)
 
-                if 'Welcome to the P&amp;A Website!' not in response.text:
+                if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
                     break
 
                 if trial==HTTP_ATTEMPTS-1:
