@@ -81,7 +81,7 @@ if __name__ == '__main__':
         
         for owner_id in tqdm(all_owner_ids):
             url   = f'http://www.jonescad.org/{session_id}/ptaxowner.aspx?ID=Pay&Owner={owner_id}&prop=R'
-            fname = f'{data_dir}/owner_{owner_id:06d}.html'
+            fname = f'{data_dir}/owner_{owner_id:08d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
                 response = requests.get(url)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         
         for prop_id in tqdm(all_prop_ids):
             url   = f'http://www.jonescad.org/{session_id}/rgeneral.aspx?ID={prop_id}&seq=1'
-            fname = f'{data_dir}/prop_{prop_id}.html'
+            fname = f'{data_dir}/prop_{prop_id:06d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
                 response = requests.get(url)
