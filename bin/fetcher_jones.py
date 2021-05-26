@@ -20,7 +20,7 @@ def generate_session_id(url='http://www.jonescad.org/search.aspx?clientid=jonesc
     request_res  = requests.get(url)
     assigned_url = request_res.url
     session_id   = assigned_url.split('/')[3]
-    assert re.match('\(S\(.*\)\)', idd), "Wrong format of the session ID"
+    assert re.match('\(S\(.*\)\)', session_id), "Wrong format of the session ID"
     
     return session_id
 
@@ -44,8 +44,9 @@ if __name__ == '__main__':
         fetch_properties, fetch_owners = False, False
     else:
         parser = argparse.ArgumentParser(description='What to fetch')
-        parser.add_argument('--properties', type=bool, help='fetch properties', required=False, default=False)
-        parser.add_argument('--owners', type=bool, help='fetch owners', required=False, default=False)
+        parser.add_argument('--properties', help='fetch properties', dest='properties', action='store_true', required=False)
+        parser.add_argument('--owners', help='fetch owners', dest='owners', action='store_true', required=False)
+        parser.set_defaults(owners=False, properties=False)
         args   = parser.parse_args()
         fetch_properties, fetch_owners = args.properties, args.owners
     
