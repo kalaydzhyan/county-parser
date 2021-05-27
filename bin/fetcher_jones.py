@@ -7,7 +7,7 @@ import numpy as np
 from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout
 
 HTTP_ATTEMPTS  = 200
-HTTP_TIMEOUT   = 10
+HTTP_TIMEOUT   = 10*60 #There are 5min+ delays observed with the county website
 CNTY_SFFX      = 'jones'
 OWNER_ID_SPLIT = 60000 #IDs above this are extracted from appraisal rolls
 PROP_ID_SPLIT  = 60000 #IDs above this are extracted from appraisal rolls
