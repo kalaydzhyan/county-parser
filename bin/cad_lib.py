@@ -1,4 +1,4 @@
-import os, sys, inspect, time, errno
+import os, sys, inspect, time, errno, signal
 
 def get_script_dir(follow_symlinks=True):
     if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
@@ -67,3 +67,21 @@ class FileLock(object):
  
     def __del__(self):
         self.release()
+
+class Timeout():
+    class TimeoutException(Exception):
+        pass
+
+    def _timeout(signum, frame):
+        raise Timeout.TimeoutException()
+
+    def __init__(self, timeout=10):
+        self.timeout = timeout
+        signal.signal(signal.SIGALRM, Timeout._timeout)
+
+    def __enter__(self):
+        signal.alarm(self.timeout)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        signal.alarm(0)
+        return exc_type is Timeout.TimeoutException

@@ -115,6 +115,7 @@ if __name__ == '__main__':
             absentee                  = 'HS' not in prop_description['EXEMPTIONS / ADDN CODING']
             legal_description, land_area, delinquent = analyze_legal_description(prop_description['LEGAL DESCRIPTION'])
             recent_delinquency        = float(prop_data[-1].split()[-1].replace(',', '')) if delinquent else 0
+            property_use              = prop_description['PTD'] # TODO: find a table for these codes.
             
             # figuring out if the land is vacant or almost vacant
             val_dict = dict(zip(prop_description['TYPE'].split(', '), prop_description['VALUATION'].split(', ')))
@@ -124,8 +125,9 @@ if __name__ == '__main__':
                 if 'IMP ' in prop_type:
                     imp_val += float(val_dict[prop_type].replace(',',''))
                     
-            empty_land = imp_val < EMPTY_LIMIT
-
+            empty_land        = imp_val < EMPTY_LIMIT
+            school_candidates = re.findall('\d{4}[A-Z ]*ISD',''.join(prop_data))
+            school            = school_candidates[-1][5:] if school_candidates else ''
             prop_dict         = {
                                     'prop_id'          : prop_id,
                                     'legal_description': legal_description,
@@ -134,13 +136,13 @@ if __name__ == '__main__':
                                     'owner_address'    : owner_address,
                                     'absentee'         : absentee,
                                     'empty_land'       : empty_land,
-                                    #'property_use'     : property_use,
+                                    'property_use'     : property_use,
                                     #'zoning'           : zoning,
                                     'land_area'        : land_area,
                                     #'land_dict'        : land_dict,
                                     #'recent_penalty'   : recent_penalty,
                                     'recent_delinq'    : recent_delinquency,
-                                    #'school'           : school,
+                                    'school'           : school,
                                     #'inactive'         : inactive
                                 }
 

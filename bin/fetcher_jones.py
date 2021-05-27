@@ -4,9 +4,10 @@ import os, time, requests, datetime, contextlib, argparse, sys
 import regex as re
 import pandas as pd
 import numpy as np
-from cad_lib import isnotebook, ROOT_DIR, FileLock
+from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout
 
-HTTP_ATTEMPTS  = 1000
+HTTP_ATTEMPTS  = 200
+HTTP_TIMEOUT   = 10
 CNTY_SFFX      = 'jones'
 OWNER_ID_SPLIT = 60000 #IDs above this are extracted from appraisal rolls
 PROP_ID_SPLIT  = 60000 #IDs above this are extracted from appraisal rolls
@@ -41,7 +42,7 @@ def jones_import_ids(fname):
 if __name__ == '__main__':
 
     if isnotebook():
-        fetch_properties, fetch_owners = False, False
+        fetch_properties, fetch_owners = False, True
     else:
         parser = argparse.ArgumentParser(description='What to fetch')
         parser.add_argument('--properties', help='fetch properties', dest='properties', action='store_true', required=False)
@@ -80,14 +81,15 @@ if __name__ == '__main__':
         all_owner_ids    = np.concatenate((np.arange(begin_id, end_id), special_ids))
         
         for owner_id in tqdm(all_owner_ids):
-            url   = f'http://www.jonescad.org/{session_id}/ptaxowner.aspx?ID=Pay&Owner={owner_id}&prop=R'
             fname = f'{data_dir}/owner_{owner_id:08d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
-                response = requests.get(url)
-
-                if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
-                    break
+                with Timeout(HTTP_TIMEOUT):
+                    url      = f'http://www.jonescad.org/{session_id}/ptaxowner.aspx?ID=Pay&Owner={owner_id}&prop=R'
+                    response = requests.get(url)
+                    
+                    if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
+                        break
 
                 if trial==HTTP_ATTEMPTS-1:
                     raise Exception(f'Connection timeout at owner_id={owner_id}')
@@ -108,14 +110,15 @@ if __name__ == '__main__':
         all_prop_ids     = np.concatenate((np.arange(begin_id, end_id), special_ids))
         
         for prop_id in tqdm(all_prop_ids):
-            url   = f'http://www.jonescad.org/{session_id}/rgeneral.aspx?ID={prop_id}&seq=1'
             fname = f'{data_dir}/prop_{prop_id:06d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
-                response = requests.get(url)
+                with Timeout(HTTP_TIMEOUT):
+                    url      = f'http://www.jonescad.org/{session_id}/rgeneral.aspx?ID={prop_id}&seq=1'
+                    response = requests.get(url)
 
-                if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
-                    break
+                    if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
+                        break
 
                 if trial==HTTP_ATTEMPTS-1:
                     raise Exception(f'Connection timeout at prop_id={prop_id}')
