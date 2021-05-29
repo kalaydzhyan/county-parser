@@ -18,7 +18,7 @@ else:
     
 if __name__ == '__main__':
 
-    output_dir = f'{ROOT_DIR}/output'
+    output_dir = f'{ROOT_DIR}/output/output_{CNTY_SFFX}'
     os.makedirs(output_dir, exist_ok=True) 
 
     total_list = []
