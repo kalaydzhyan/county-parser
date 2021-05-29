@@ -83,8 +83,51 @@ if __name__ == '__main__':
             with open(f'{output_dir}/output_{CNTY_SFFX}.json', 'w') as json_f:
                 json_f.write(json.dumps(total_list))
     
+    
     if parse_owners:
-        pass
+        total_list = []
+    
+        for fname in tqdm(sorted(glob.glob(f'{data_dir}/owner_*.html'))):
+            with open(fname, 'rb') as f:
+                html_text = f.read()
+                
+            soup        = BeautifulSoup(html_text, 'html.parser')
+            owner_id    = int(soup.find(id="txtOwnerID")['value'])
+            delinq_flag = b'delinquent taxes due' in html_text
+            
+            # parsing the tax table
+            data       = []
+            table_body = soup.find(id="DataGrid1")
+            rows       = table_body.find_all('tr')
+            for row in rows:
+                cols = row.find_all('td')
+                cols = [ele.text.strip() for ele in cols]
+                data.append([ele for ele in cols if ele])
+                
+            # fixing up html->table parsing problems
+            data           = [[el for el in row if el not in ['Homestead', 'Receipt']] for row in data]
+            df             = pd.DataFrame(data)
+            df.columns     = df.iloc[0]
+            df             = df[1:]
+            df['owner_id'] = owner_id
+            df             = df.rename(columns={'Parcel ID': 'prop_id', 
+                                                'TotalPenalty & InterestAnd/Or Discount':'recent_penalty', 
+                                                'Tax Due':'recent_delinq'})
+            df             = df[['owner_id', 'prop_id', 'recent_penalty', 'recent_delinq']]
+            df.prop_id     = df.prop_id.astype(int)
+            
+            for col in ['recent_penalty', 'recent_delinq']:
+                df[col] = df[col].map(lambda x: x.replace(',','')).astype(float)
+
+            if not delinq_flag:
+                df.recent_delinq = 0.0
+
+            total_list.extend(df.to_dict('records'))
+            
+        if total_list:
+            with open(f'{output_dir}/output_{CNTY_SFFX}_owners.json', 'w') as json_f:
+                json_f.write(json.dumps(total_list))
+    
     
     if merge_data:
         pass
