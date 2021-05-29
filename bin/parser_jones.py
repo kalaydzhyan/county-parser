@@ -4,6 +4,7 @@ import json, glob, platform, os
 import regex as re
 import pandas as pd
 import numpy as np
+import pickle as pkl
 from bs4 import BeautifulSoup
 from cad_lib import isnotebook, ROOT_DIR, EMPTY_LIMIT
 
@@ -16,13 +17,15 @@ else:
     
 def entries_to_line(soup, fields):
     soup_elements = [soup.find(id=field) for field in fields]
-    line          = ', '.join([element['value'] for element in soup_elements if 'value' in element.attrs])
+    table_cells   = [element['value'] for element in soup_elements if 'value' in element.attrs]
+    line          = ', '.join([cell for cell in table_cells if cell!=" "])
     return line
+
 
 if __name__ == '__main__':
 
     if isnotebook():
-        parse_properties, parse_owners, merge_data = True, False, False
+        parse_properties, parse_owners, merge_data = False, False, True
     else:
         parser = argparse.ArgumentParser(description='What to generate')
         parser.add_argument('--properties', help='parse properties', dest='properties', action='store_true', required=False)
@@ -35,11 +38,15 @@ if __name__ == '__main__':
     data_dir   = f'{ROOT_DIR}/data/data_{CNTY_SFFX}'
     output_dir = f'{ROOT_DIR}/output/output_{CNTY_SFFX}'
     os.makedirs(output_dir, exist_ok=True)
+    
+    output_fname_owners = f'{output_dir}/output_{CNTY_SFFX}_owners.json'
+    output_fname_prop   = f'{output_dir}/output_{CNTY_SFFX}_prop.json'
+    
 
     if parse_properties:
         total_list = []
     
-        for fname in tqdm(sorted(glob.glob(f'{data_dir}/prop_*.html'))): ## change later!
+        for fname in tqdm(sorted(glob.glob(f'{data_dir}/prop_*.html'))):
             with open(fname, 'rb') as f:
                 html_text = f.read()
             
@@ -80,9 +87,8 @@ if __name__ == '__main__':
             total_list.append(prop_dict)
 
         if total_list:
-            with open(f'{output_dir}/output_{CNTY_SFFX}.json', 'w') as json_f:
+            with open(output_fname_prop, 'w') as json_f:
                 json_f.write(json.dumps(total_list))
-    
     
     if parse_owners:
         total_list = []
@@ -125,17 +131,28 @@ if __name__ == '__main__':
             total_list.extend(df.to_dict('records'))
             
         if total_list:
-            with open(f'{output_dir}/output_{CNTY_SFFX}_owners.json', 'w') as json_f:
+            with open(output_fname_owners, 'w') as json_f:
                 json_f.write(json.dumps(total_list))
     
-    
     if merge_data:
-        pass
-#         df = pd.DataFrame(total_list)
-#         df.to_csv(f'{output_dir}/output_{CNTY_SFFX}.csv', index=False)
+        df1            = pd.read_json(output_fname_prop)
+        df2            = pd.read_json(output_fname_owners)
+        df             = df1.merge(df2, on='prop_id', how='left')
+        missing_owners = np.unique(df[df.owner_id.isna()].owner_name.values)
+        
+        with open(f'{output_dir}/missing_owners.pkl', 'wb') as f:
+            pkl.dump(missing_owners, f)
+        
+        df.drop_duplicates(inplace=True)
+        df.drop(columns=['owner_id'], inplace=True)
 
-#         node_name = platform.node()
-#         if re.match('ip\-\d+\-\d+\-\d+\-\d+\..*', node_name):
-#             aws_dir = '/var/www/html/output'
-#             os.makedirs(aws_dir, exist_ok=True) 
-#             df.to_csv(f'{aws_dir}/output_{CNTY_SFFX}.csv', index=False)
+        with open(f'{output_dir}/output_{CNTY_SFFX}.json', 'w') as json_f:
+                        json_f.write(json.dumps(df.to_dict('records')))
+
+        df.to_csv(f'{output_dir}/output_{CNTY_SFFX}.csv', index=False)
+
+        node_name = platform.node()
+        if re.match('ip\-\d+\-\d+\-\d+\-\d+\..*', node_name):
+            aws_dir = '/var/www/html/output'
+            os.makedirs(aws_dir, exist_ok=True) 
+            df.to_csv(f'{aws_dir}/output_{CNTY_SFFX}.csv', index=False)
