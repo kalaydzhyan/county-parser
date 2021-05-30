@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, time, requests, datetime, contextlib, argparse, sys
+import os, time, requests, datetime, contextlib, argparse, sys, glob
 import regex as re
 import pandas as pd
 import numpy as np
@@ -66,14 +66,16 @@ def extract_missing_owners(fname):
     if os.path.exists(fname):
         with open(fname, 'rb') as f:
             owner_names = pkl.load(f)
+            
+## Not stable with Jones county website
+#         options          = Options()
+#         options.headless = True
+#         driver           = webdriver.Chrome(options=options)
 
-        #options          = Options()
-        #options.headless = True
-        #driver           = webdriver.Chrome(options=options)
-        #extra_ids        = []
+        extra_ids = []
 
         for owner_name in owner_names:
-            ids = owner_name_to_ids(owner_name, driver)
+            ids = owner_name_to_ids(owner_name)
             extra_ids.extend(ids)
         
         result_ids = np.unique(extra_ids)
@@ -122,9 +124,12 @@ if __name__ == '__main__':
 
     if fetch_owners: 
         begin_id, end_id = 1, OWNER_ID_SPLIT
+        standard_ids     = np.arange(begin_id, end_id)
+        existing_fnames  = glob.glob(f'{ROOT_DIR}/data/data_{CNTY_SFFX}/owner*')
+        existing_ids     = [int(fname.split('/')[-1].replace('owner_', '').replace('.html', '')) for fname in existing_fnames]
         special_ids      = owner_ids[owner_ids>=OWNER_ID_SPLIT]
         missing_ids      = extract_missing_owners(f'{output_dir}/missing_owners.pkl')
-        all_owner_ids    = np.concatenate((np.arange(begin_id, end_id), special_ids, missing_ids))
+        all_owner_ids    = np.concatenate((standard_ids, existing_ids, special_ids, missing_ids))
         all_owner_ids    = np.unique(all_owner_ids)
         
         for owner_id in tqdm(all_owner_ids):
