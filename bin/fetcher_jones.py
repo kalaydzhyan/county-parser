@@ -130,7 +130,7 @@ if __name__ == '__main__':
         special_ids      = owner_ids[owner_ids>=OWNER_ID_SPLIT]
         missing_ids      = extract_missing_owners(f'{output_dir}/missing_owners.pkl')
         all_owner_ids    = np.concatenate((standard_ids, existing_ids, special_ids, missing_ids))
-        all_owner_ids    = np.unique(all_owner_ids)
+        all_owner_ids    = np.array(np.unique(all_owner_ids), dtype=np.int32)
         
         for owner_id in tqdm(all_owner_ids):
             fname = f'{data_dir}/owner_{owner_id:08d}.html'
