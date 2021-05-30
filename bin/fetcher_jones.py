@@ -4,6 +4,9 @@ import os, time, requests, datetime, contextlib, argparse, sys
 import regex as re
 import pandas as pd
 import numpy as np
+import pickle as pkl
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout
 
 HTTP_ATTEMPTS  = 200
@@ -38,6 +41,47 @@ def jones_import_ids(fname):
     
     return owner_ids, property_ids
 
+def owner_name_to_ids(owner_name, driver=None):
+    if driver is None:
+        options = Options()
+        options.headless = True
+        driver = webdriver.Chrome(options=options)
+
+    session_id = generate_session_id()
+    driver.get(f'http://jonescad.org/{session_id}/search.aspx?clientid=jonescad')
+    driver.find_elements_by_xpath("//input[@name='radSearch' and @value='radPropTax']")[0].click()
+    driver.find_elements_by_xpath("//input[@name='radPanelChoice' and @value='radOwnerName']")[0].click()
+    driver.find_element_by_id('txtUserInput').send_keys(owner_name)
+    driver.find_elements_by_xpath('//*[@id="btnSearch"]')[0].click()
+    
+    if 'no results' in driver.page_source:
+        owner_ids = []
+    else:
+        owner_instances = re.findall('Owner=\d*', driver.page_source) 
+        owner_ids = [int(line.split('=')[1]) for line in owner_instances]
+        
+    return owner_ids
+
+def extract_missing_owners(fname):
+    if os.path.exists(fname):
+        with open(fname, 'rb') as f:
+            owner_names = pkl.load(f)
+
+        options          = Options()
+        options.headless = True
+        driver           = webdriver.Chrome(options=options)
+        extra_ids        = []
+
+        for owner_name in owner_names:
+            ids = owner_name_to_ids(owner_name, driver=driver)
+            extra_ids.extend(ids)
+        
+        result_ids = np.unique(extra_ids)
+    else:
+        result_ids = []
+        
+    return result_ids
+
 
 if __name__ == '__main__':
 
@@ -51,7 +95,8 @@ if __name__ == '__main__':
         args   = parser.parse_args()
         fetch_properties, fetch_owners = args.properties, args.owners
     
-    data_dir = f'{ROOT_DIR}/data/data_{CNTY_SFFX}'
+    data_dir   = f'{ROOT_DIR}/data/data_{CNTY_SFFX}'
+    output_dir = f'{ROOT_DIR}/output/output_{CNTY_SFFX}'
     os.makedirs(data_dir, exist_ok=True)
 
     records_url   = 'http://www.jonescad.org/open_records.htm'
@@ -78,7 +123,9 @@ if __name__ == '__main__':
     if fetch_owners: 
         begin_id, end_id = 1, OWNER_ID_SPLIT
         special_ids      = owner_ids[owner_ids>=OWNER_ID_SPLIT]
-        all_owner_ids    = np.concatenate((np.arange(begin_id, end_id), special_ids))
+        missing_ids      = extract_missing_owners(f'{output_dir}/missing_owners.pkl')
+        all_owner_ids    = np.concatenate((np.arange(begin_id, end_id), special_ids, missing_ids))
+        all_owner_ids    = np.unique(all_owner_ids)
         
         for owner_id in tqdm(all_owner_ids):
             fname = f'{data_dir}/owner_{owner_id:08d}.html'
