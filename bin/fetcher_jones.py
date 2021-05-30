@@ -67,13 +67,13 @@ def extract_missing_owners(fname):
         with open(fname, 'rb') as f:
             owner_names = pkl.load(f)
 
-        options          = Options()
-        options.headless = True
-        driver           = webdriver.Chrome(options=options)
-        extra_ids        = []
+        #options          = Options()
+        #options.headless = True
+        #driver           = webdriver.Chrome(options=options)
+        #extra_ids        = []
 
         for owner_name in owner_names:
-            ids = owner_name_to_ids(owner_name, driver=driver)
+            ids = owner_name_to_ids(owner_name, driver)
             extra_ids.extend(ids)
         
         result_ids = np.unique(extra_ids)
