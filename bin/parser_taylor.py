@@ -25,17 +25,17 @@ if __name__ == '__main__':
     
     for fname in tqdm(sorted(glob.glob(f'{ROOT_DIR}/data/data_{CNTY_SFFX}/*.html'))):
     
-        with open(fname, 'rb') as f:
+        with open(fname, 'r') as f:
             html_text = f.read()
 
         # Skipping personal property, mobile homes, etc.
-        if b'Type:</td><td>Real' not in html_text or b'No land segments' in html_text:
+        if 'Type:</td><td>Real' not in html_text or 'No land segments' in html_text:
             continue
             
-        inactive           = b'(INACTIVE)' in html_text
+        inactive           = '(INACTIVE)' in html_text
         
         try:
-            soup               = BeautifulSoup(html_text, 'html.parser')
+            soup               = BeautifulSoup(html_text, 'lxml')
             tax_object         = soup.find(id="taxDueDetails_dataSection")
             table_entries      = tax_object.find_all('td')
             second_total_idx   = [index for index, s in enumerate(table_entries) if 'TOTAL' in s.text][1]
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         owner_name        = property_details[34].text
         owner_address     = ', '.join([s.strip() for s in property_details[38].strings])
         absentee          = 'HS' not in property_details[-1].text
-        empty_land        = b'No improvements exist for this property.' in html_text
+        empty_land        = 'No improvements exist for this property.' in html_text
         
         land_details      = soup.find(id="landDetails").find_all('td')
         land_textarray    = [s.text for s in land_details]

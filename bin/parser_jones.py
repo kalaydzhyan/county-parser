@@ -47,10 +47,10 @@ if __name__ == '__main__':
         total_list = []
     
         for fname in tqdm(sorted(glob.glob(f'{data_dir}/prop_*.html'))):
-            with open(fname, 'rb') as f:
+            with open(fname, 'r') as f:
                 html_text = f.read()
             
-            soup              = BeautifulSoup(html_text, 'html.parser')
+            soup              = BeautifulSoup(html_text, 'lxml')
             prop_id           = int(soup.find(id="txtParcel")['value'])
             legal_description = entries_to_line(soup, [f"txtLegal{num}" for num in range(1, 5)])
             prop_address      = entries_to_line(soup, ["txtPropAddress", "txtPropCityState"])
@@ -59,7 +59,7 @@ if __name__ == '__main__':
             absentee          = 'H' not in entries_to_line(soup, ["txtHomestead"])
             empty_land        = float(soup.find(id="txtImprovement")['value'].replace(',','')) < EMPTY_LIMIT
             land_area         = float(soup.find(id="txtAcres")['value'].replace(',',''))
-            potential_schools = re.findall('>[^<]* ISD[^<]*<', html_text.decode('UTF8'))
+            potential_schools = re.findall('>[^<]* ISD[^<]*<', html_text)
             school            = potential_schools[-1][1:-1] if potential_schools else ''
             property_use      = soup.find(id="txtCatCode")['value']
             # ^---- decode it later, try the following sources after figuring out unique entries:
@@ -94,12 +94,12 @@ if __name__ == '__main__':
         total_list = []
     
         for fname in tqdm(sorted(glob.glob(f'{data_dir}/owner_*.html'))):
-            with open(fname, 'rb') as f:
+            with open(fname, 'r') as f:
                 html_text = f.read()
                 
-            soup        = BeautifulSoup(html_text, 'html.parser')
+            soup        = BeautifulSoup(html_text, 'lxml')
             owner_id    = int(soup.find(id="txtOwnerID")['value'])
-            delinq_flag = b'delinquent taxes due' in html_text
+            delinq_flag = 'delinquent taxes due' in html_text
             
             # parsing the tax table
             data       = []
