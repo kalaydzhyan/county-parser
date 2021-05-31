@@ -7,7 +7,8 @@ import numpy as np
 import pickle as pkl
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout
+from selenium.common.exceptions import NoSuchElementException
+from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout, WebDriver
 
 HTTP_ATTEMPTS  = 200
 HTTP_TIMEOUT   = 10*60 #There are 5min+ delays observed with the county website
@@ -67,16 +68,21 @@ def extract_missing_owners(fname):
         with open(fname, 'rb') as f:
             owner_names = pkl.load(f)
             
-## Not stable with Jones county website
-#         options          = Options()
-#         options.headless = True
-#         driver           = webdriver.Chrome(options=options)
+        options          = Options()
+        options.headless = True
+        driver           = webdriver.Chrome(options=options)
+        i, extra_ids     = 0, []
+        owner_list_len   = len(owner_names)
 
-        extra_ids = []
-
-        for owner_name in owner_names:
-            ids = owner_name_to_ids(owner_name)
-            extra_ids.extend(ids)
+        # Low level solution for unstable county website...
+        while i<owner_list_len:
+            with WebDriver(webdriver.Chrome(options=options)) as driver:
+                with contextlib.suppress(IndexError, NoSuchElementException):
+                    while i<owner_list_len:
+                        owner_name = owner_names[i]
+                        ids        = owner_name_to_ids(owner_name, driver)
+                        extra_ids.extend(ids)
+                        i += 1
         
         result_ids = np.unique(extra_ids)
     else:
