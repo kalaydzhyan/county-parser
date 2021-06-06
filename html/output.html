@@ -86,7 +86,7 @@
 
 	  <div class="col-xl-3 col-md-6 d-flex align-items-stretch mt-4 mt-xl-0" data-aos="zoom-in" data-aos-delay="0">
             <div class="icon-box">
-              <div class="icon"><i class="bx bxl-dribbble"></i></div>
+              <div class="icon"><i class="bx bx-star"></i></div>
               <h4><a href="output/output_all.zip">ALL IN ONE</a></h4>
               <p>All available data in one ZIP file.</p>
             </div>
@@ -115,11 +115,45 @@
               <p>Population 13,943. County seat in historic town of Baird, TX. Nice combination of rural life and proximity to large and small cities.</p>
             </div>
           </div>
-	  
-	  
-        </div>
-	  
+
+         </div>
+	 <br><br>
+	 <div class="section-title">
+	  <h3>Description of the data fields</h3>
+	 </div>
+
+	 
+	 <strong>prop_id</strong> - property ID at the county database.
+	 <br>
+	 <strong>legal_description</strong> - legal description of the property. This field is extracted from the county database and is not necessarily accurate.
+	 <br>
+	 <strong>prop_address</strong> - property street address, if it has one.
+	 <br>
+	 <strong>owner_name</strong> - name of the owner.
+	 <br>
+	 <strong>owner_address</strong> - address of the owner.
+         <br>
+         <strong>absentee</strong> - whether or not the owner lives on the property (<i>True</i>=absentee, <i>False</i>=homestead).
+	 <br>
+	 <strong>empty_land</strong> - whether or not the land is empty/vacant. If total improvements are below $4000, the land still counts as empty.
+	 <br>
+	 <strong>property_use</strong> - property use, if any. Sometimes, same as zoning.
+	 <br>
+	 <strong>zoning</strong> - property zoning. See <i>land_dict</i> for Mixed zoning.
+	 <br>
+	 <strong>land_area</strong> - area of the land, in acres.
+         <br>
+         <strong>land_dict</strong> - dictionary of uses with corresponding land areas, when available.
+	 <br>
+	 <strong>recent_penalty</strong> - most recent tax penalty.
+	 <br>
+	 <strong>recent_delinq</strong> - most recent tax delinquency.
+	 <br>
+	 <strong>school</strong> - school district.
+	 <br>
+	 <strong>inactive</strong> - flag showing the property is inactive, if such information is supplied by the county.
       </div>
+      
     </section>
 
   </main><!-- End #main -->
