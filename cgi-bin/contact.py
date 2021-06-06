@@ -36,7 +36,7 @@ BODY_HTML = f"""<html>
                    <br><br>
                    {message}
                    <br><br>
-                   <p>This is an automatic email was sent with AWS SDK for Python (Boto) </p>
+                   <p>This is an automatic email sent with AWS SDK for Python (Boto) </p>
                   </body>
                  </html>
              """
