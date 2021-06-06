@@ -10,39 +10,37 @@ email   = form.getvalue('email')
 SUBJECT = form.getvalue('subject')
 message = form.getvalue('message')
 
-#name = email = SUBJECT = message = 'TEST'
-
 print("Status: 200 OK\n")
 
-SENDER     = "Abilene Rental Homes <abilene.rental.homes@gmail.com>"
-RECIPIENT  = "abilene.rental.homes@gmail.com"
-BODY_TEXT  = (f"{name} with email {email} sent you the following message: {message}"
-              "This email was sent with Amazon SES using the "
-              "AWS SDK for Python (Boto)."
-             )
+
+DEFAULT_REGION = 'us-east-2'
+CHARSET        = "UTF-8"
+SENDER         = "Abilene Rental Homes <abilene.rental.homes@gmail.com>"
+RECIPIENT      = "abilene.rental.homes@gmail.com"
+BODY_TEXT      = (
+                   f"{name} with email {email} sent you the following message:"
+                   f"{message}"
+                   "This email was sent with Amazon SES using the "
+                   "AWS SDK for Python (Boto)."
+                 )
 
 #CONFIGURATION_SET = "ConfigSet"
 
-# The HTML body of the email.
+
 BODY_HTML = f"""<html>
-<head></head>
-<body>
-  Hi Tigran,
-  <br>
-  {name} with email {email} sent you the following message:
-  <br>
-  {message}
+                 <head></head>
+                  <body>
+                   Dear Admin,
+                   <br><br>
+                   <strong>{name}</strong> with email <strong>{email}</strong> sent you the following message:
+                   <br><br>
+                   {message}
+                   <br><br>
+                   <p>This is an automatic email was sent with AWS SDK for Python (Boto) </p>
+                  </body>
+                 </html>
+             """
 
-  <p>This email was sent with
-    <a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the
-    <a href='https://aws.amazon.com/sdk-for-python/'>
-      AWS SDK for Python (Boto)</a>.</p>
-</body>
-</html>
-"""
-
-DEFAULT_REGION = 'us-east-2'
-CHARSET = "UTF-8"
 
 
 aws_dict = {'region': DEFAULT_REGION}
@@ -59,7 +57,6 @@ client = boto3.client('ses', region_name=aws_dict['region'],
                             aws_secret_access_key=aws_dict['aws_secret_access_key'])
 
 try:
-    #Provide the contents of the email.
     response = client.send_email(
         Destination={
             'ToAddresses': [
@@ -86,8 +83,7 @@ try:
         # If you are not using a configuration set, comment or delete the
         # following line
         #ConfigurationSetName=CONFIGURATION_SET,
-    )
-# Display an error if something goes wrong.	
+    )	
 except ClientError as e:
     print(e.response['Error']['Message'])
 else:
