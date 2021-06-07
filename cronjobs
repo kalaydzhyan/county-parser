@@ -9,3 +9,4 @@
 0  10 * * 6 /home/ec2-user/county-parser/bin/parser_jones.py --properties --owners --merge
 
 0  13 * * * /usr/bin/zip -j /var/www/html/output/output_all.zip /var/www/html/output/*.csv
+10  0 * * 0 for county in taylor callahan jones; do head -n 300 /var/www/html/output/output_$county.csv > /var/www/html/assets/samples/sample_$county.csv; done 

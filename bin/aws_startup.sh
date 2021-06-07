@@ -16,9 +16,9 @@ for name in requests bs4 numpy pandas tqdm regex xldr lxml boto3; do pip install
 cd /tmp/
 wget https://chromedriver.storage.googleapis.com/2.37/chromedriver_linux64.zip
 unzip chromedriver_linux64.zip
-sudo mv chromedriver /usr/bin/chromedriver
+mv chromedriver /usr/bin/chromedriver
 curl https://intoli.com/install-google-chrome.sh | bash
-sudo mv /usr/bin/google-chrome-stable /usr/bin/google-chrome
+mv /usr/bin/google-chrome-stable /usr/bin/google-chrome
 pip install selenium
 pip install webdriver-manager
 
