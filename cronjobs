@@ -4,7 +4,7 @@
 30 0  * * 0 /home/ec2-user/county-parser/bin/parser_callahan.py
 0  0  * * 1 /home/ec2-user/county-parser/bin/fetcher_runner_taylor.sh
 0  0  * * 2 /home/ec2-user/county-parser/bin/parser_taylor.py
-0  0  * * 3 /home/ec2-user/county-parser/bin/fetcher_jones.py --properries
+0  0  * * 3 /home/ec2-user/county-parser/bin/fetcher_jones.py --properties
 0  0  * * 4 /home/ec2-user/county-parser/bin/fetcher_jones.py --owners
 0  10 * * 6 /home/ec2-user/county-parser/bin/parser_jones.py --properties --owners --merge
 
