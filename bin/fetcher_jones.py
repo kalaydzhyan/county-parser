@@ -8,13 +8,17 @@ import pickle as pkl
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout, WebDriver
 
-HTTP_ATTEMPTS  = 200
-HTTP_TIMEOUT   = 10*60 #There are 5min+ delays observed with the county website
-CNTY_SFFX      = 'jones'
-OWNER_ID_SPLIT = 60000 #IDs above this are extracted from appraisal rolls
-PROP_ID_SPLIT  = 60000 #IDs above this are extracted from appraisal rolls
+HTTP_ATTEMPTS  = 200     #Number of attempts to reconnect to the server
+HTTP_TIMEOUT   = 10*60   #There are 5min+ delays observed with the county website
+CNTY_SFFX      = 'jones' #County name
+OWNER_ID_SPLIT = 60000   #IDs above this are extracted from appraisal rolls
+PROP_ID_SPLIT  = 60000   #IDs above this are extracted from appraisal rolls
+WEBDRIVER_WAIT = 2       #Waiting time for an element (in sec), selenium webdriver
 
 if isnotebook():
     from tqdm.notebook import tqdm, trange
@@ -50,9 +54,10 @@ def owner_name_to_ids(owner_name, driver=None):
 
     session_id = generate_session_id()
     driver.get(f'http://jonescad.org/{session_id}/search.aspx?clientid=jonescad')
-    driver.find_elements_by_xpath("//input[@name='radSearch' and @value='radPropTax']")[0].click()
-    driver.find_elements_by_xpath("//input[@name='radPanelChoice' and @value='radOwnerName']")[0].click()
-    driver.find_element_by_id('txtUserInput').send_keys(owner_name)
+
+    WebDriverWait(driver, WEBDRIVER_WAIT).until(EC.presence_of_element_located((By.XPATH, "//input[@name='radSearch' and @value='radPropTax']"))).click()
+    WebDriverWait(driver, WEBDRIVER_WAIT).until(EC.presence_of_element_located((By.XPATH, "//input[@name='radPanelChoice' and @value='radOwnerName']"))).click()
+    WebDriverWait(driver, WEBDRIVER_WAIT).until(EC.presence_of_element_located((By.ID, 'txtUserInput'))).send_keys(owner_name)
     driver.find_elements_by_xpath('//*[@id="btnSearch"]')[0].click()
     
     if 'no results' in driver.page_source:
