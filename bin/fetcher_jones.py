@@ -13,7 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from cad_lib import isnotebook, ROOT_DIR, FileLock, Timeout, WebDriver
 
-HTTP_ATTEMPTS  = 200     #Number of attempts to reconnect to the server
+HTTP_ATTEMPTS  = 50     #Number of attempts to reconnect to the server
 HTTP_TIMEOUT   = 10*60   #There are 5min+ delays observed with the county website
 CNTY_SFFX      = 'jones' #County name
 OWNER_ID_SPLIT = 60000   #IDs above this are extracted from appraisal rolls
@@ -147,12 +147,13 @@ if __name__ == '__main__':
             fname = f'{data_dir}/owner_{owner_id:08d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
-                with Timeout(HTTP_TIMEOUT):
-                    url      = f'http://www.jonescad.org/{session_id}/ptaxowner.aspx?ID=Pay&Owner={owner_id}&prop=R'
-                    response = requests.get(url)
-                    
-                    if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
-                        break
+                with contextlib.suppress(ConnectionResetError):
+                    with Timeout(HTTP_TIMEOUT):
+                        url      = f'http://www.jonescad.org/{session_id}/ptaxowner.aspx?ID=Pay&Owner={owner_id}&prop=R'
+                        response = requests.get(url)
+
+                        if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
+                            break
 
                 if trial==HTTP_ATTEMPTS-1:
                     raise Exception(f'Connection timeout at owner_id={owner_id}')
@@ -176,12 +177,13 @@ if __name__ == '__main__':
             fname = f'{data_dir}/prop_{prop_id:06d}.html'
 
             for trial in range(HTTP_ATTEMPTS):
-                with Timeout(HTTP_TIMEOUT):
-                    url      = f'http://www.jonescad.org/{session_id}/rgeneral.aspx?ID={prop_id}&seq=1'
-                    response = requests.get(url)
+                with contextlib.suppress(ConnectionResetError):
+                    with Timeout(HTTP_TIMEOUT):
+                        url      = f'http://www.jonescad.org/{session_id}/rgeneral.aspx?ID={prop_id}&seq=1'
+                        response = requests.get(url)
 
-                    if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
-                        break
+                        if response.ok and 'Welcome to the P&amp;A Website!' not in response.text:
+                            break
 
                 if trial==HTTP_ATTEMPTS-1:
                     raise Exception(f'Connection timeout at prop_id={prop_id}')
