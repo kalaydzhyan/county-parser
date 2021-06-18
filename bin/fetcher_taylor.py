@@ -30,11 +30,11 @@ if __name__ == '__main__':
     headers = get_headers()
 
     if isnotebook():
-        begin_id, end_id = 10000, 100000
+        begin_id, end_id = 10000, 110000
     else:
         parser = argparse.ArgumentParser(description='Fetcher range')
         parser.add_argument('-begin_id', type=int, help='starting id', required=False, default=10000)
-        parser.add_argument('-end_id', type=int, help='ending id', required=False, default=1000000)
+        parser.add_argument('-end_id', type=int, help='ending id', required=False, default=110000)
         args = parser.parse_args()
         begin_id, end_id = args.begin_id, args.end_id
     
