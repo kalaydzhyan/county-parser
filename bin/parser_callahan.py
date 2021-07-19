@@ -136,6 +136,7 @@ if __name__ == '__main__':
                                     'owner_address'    : owner_address,
                                     'absentee'         : absentee,
                                     'empty_land'       : empty_land,
+                                    'improvement_value': int(imp_val),
                                     'property_use'     : property_use,
                                     #'zoning'           : zoning,
                                     'land_area'        : land_area,

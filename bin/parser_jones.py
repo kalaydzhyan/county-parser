@@ -57,7 +57,8 @@ if __name__ == '__main__':
             owner_name        = entries_to_line(soup, ["txtName"])
             owner_address     = entries_to_line(soup, ["txtCareof", "txtStreet", "txtStreetOverflow", "txtCityState"])
             absentee          = 'H' not in entries_to_line(soup, ["txtHomestead"])
-            empty_land        = float(soup.find(id="txtImprovement")['value'].replace(',','')) < EMPTY_LIMIT
+            imp_val           = float(soup.find(id="txtImprovement")['value'].replace(',',''))
+            empty_land        = imp_val < EMPTY_LIMIT
             land_area         = float(soup.find(id="txtAcres")['value'].replace(',',''))
             potential_schools = re.findall('>[^<]* ISD[^<]*<', html_text)
             school            = potential_schools[-1][1:-1] if potential_schools else ''
@@ -74,6 +75,7 @@ if __name__ == '__main__':
                                      'owner_address'    : owner_address,
                                      'absentee'         : absentee,
                                      'empty_land'       : empty_land,
+                                     'improvement_value': int(imp_val),
                                      'property_use'     : property_use,
 #                                     'zoning'           : zoning,
                                      'land_area'        : land_area,
