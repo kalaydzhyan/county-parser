@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import regex as re
 
-from cad_lib import isnotebook, ROOT_DIR
+from cad_lib import isnotebook, ROOT_DIR, EMPTY_LIMIT
 
 CNTY_SFFX = 'taylor'
 
@@ -64,8 +64,10 @@ if __name__ == '__main__':
         owner_name        = property_details[34].text
         owner_address     = ', '.join([s.strip() for s in property_details[38].strings])
         absentee          = 'HS' not in property_details[-1].text
-        empty_land        = 'No improvements exist for this property.' in html_text
-        
+        #empty_land        = 'No improvements exist for this property.' in html_text
+        imp_val_text      = soup.find(id="rollHistoryDetails").find_all('td')[1].text
+        improvement_value = int(imp_val_text.replace('$','').replace(',',''))
+        empty_land        = improvement_value < EMPTY_LIMIT
         land_details      = soup.find(id="landDetails").find_all('td')
         land_textarray    = [s.text for s in land_details]
         stride            = 9
@@ -84,6 +86,7 @@ if __name__ == '__main__':
                                 'owner_address'    : owner_address,
                                 'absentee'         : absentee,
                                 'empty_land'       : empty_land,
+                                'improvement_value': improvement_value,
                                 'property_use'     : property_use,
                                 'zoning'           : zoning,
                                 'land_area'        : land_area,
