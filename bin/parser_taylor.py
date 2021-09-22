@@ -65,7 +65,11 @@ if __name__ == '__main__':
         owner_address     = ', '.join([s.strip() for s in property_details[38].strings])
         absentee          = 'HS' not in property_details[-1].text
         #empty_land        = 'No improvements exist for this property.' in html_text
-        imp_val_text      = soup.find(id="rollHistoryDetails").find_all('td')[1].text
+        for element in soup.find(id="rollHistoryDetails").find_all('td')[1::7]:
+            imp_val_text = element.text
+            if imp_val_text!='N/A':   # property already appraised
+                break
+            
         improvement_value = int(imp_val_text.replace('$','').replace(',',''))
         empty_land        = improvement_value < EMPTY_LIMIT
         land_details      = soup.find(id="landDetails").find_all('td')
