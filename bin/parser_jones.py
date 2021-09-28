@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import json, glob, platform, os, argparse
+import json, glob, platform, os, argparse, datetime
 import regex as re
 import pandas as pd
 import numpy as np
@@ -56,6 +56,9 @@ if __name__ == '__main__':
             prop_address      = entries_to_line(soup, ["txtPropAddress", "txtPropCityState"])
             owner_name        = entries_to_line(soup, ["txtName"])
             owner_address     = entries_to_line(soup, ["txtCareof", "txtStreet", "txtStreetOverflow", "txtCityState"])
+            transfer_date     = entries_to_line(soup, ["txtSaleDeedDate"])
+            if transfer_date:
+                transfer_date = datetime.datetime.strptime(transfer_date, "%m/%d/%Y").strftime('%Y-%m-%d')
             absentee          = 'H' not in entries_to_line(soup, ["txtHomestead"])
             imp_val           = float(soup.find(id="txtImprovement")['value'].replace(',',''))
             empty_land        = imp_val < EMPTY_LIMIT
@@ -73,6 +76,7 @@ if __name__ == '__main__':
                                      'prop_address'     : prop_address,
                                      'owner_name'       : owner_name,
                                      'owner_address'    : owner_address,
+                                     'transfer_date'    : transfer_date,
                                      'absentee'         : absentee,
                                      'empty_land'       : empty_land,
                                      'improvement_value': int(imp_val),
