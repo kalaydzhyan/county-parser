@@ -81,6 +81,13 @@ if __name__ == '__main__':
         land_dict         = dict(zip(land_types, land_areas))
         zoning            = land_types[0] if len(land_types)==1 else 'Mixed' if land_types else 'Unknown'
         
+        try:
+            tax_object    = soup.find(id="deedHistoryDetails")
+            transfer_date = tax_object.find_all('td')[1].text
+            transfer_date = datetime.datetime.strptime(transfer_date, "%m/%d/%Y").strftime('%Y-%m-%d')
+        except:
+            transfer_date = ''
+        
         
         prop_dict         = {
                                 'prop_id'          : prop_id,
@@ -88,6 +95,7 @@ if __name__ == '__main__':
                                 'prop_address'     : prop_address,
                                 'owner_name'       : owner_name,
                                 'owner_address'    : owner_address,
+                                'transfer_date'    : transfer_date,
                                 'absentee'         : absentee,
                                 'empty_land'       : empty_land,
                                 'improvement_value': improvement_value,
