@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, subprocess, glob, json, platform
+import os, subprocess, glob, json, platform, datetime
 import regex as re
 import numpy as np
 import pandas as pd
@@ -117,6 +117,15 @@ if __name__ == '__main__':
             recent_delinquency        = float(prop_data[-1].split()[-1].replace(',', '')) if delinquent else 0
             property_use              = prop_description['PTD'] # TODO: find a table for these codes.
             
+            transfer_line = prop_description['EXEMPTIONS / ADDN CODING']
+            try:
+                dt_idx        = transfer_line.find('DT: ')
+                transfer_date = transfer_line[dt_idx+4:]
+                transfer_date = transfer_date.split(',')[0]
+                transfer_date = datetime.datetime.strptime(transfer_date, "%m/%d/%Y").strftime('%Y-%m-%d')
+            except: 
+                transfer_date = ''
+            
             # figuring out if the land is vacant or almost vacant
             val_dict = dict(zip(prop_description['TYPE'].split(', '), prop_description['VALUATION'].split(', ')))
             imp_val  = 0.0
@@ -134,6 +143,7 @@ if __name__ == '__main__':
                                     'prop_address'     : prop_address,
                                     'owner_name'       : owner_name,
                                     'owner_address'    : owner_address,
+                                    'transfer_date'    : transfer_date,
                                     'absentee'         : absentee,
                                     'empty_land'       : empty_land,
                                     'improvement_value': int(imp_val),
