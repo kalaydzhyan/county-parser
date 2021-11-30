@@ -14,7 +14,7 @@ if isnotebook():
     from tqdm.notebook import tqdm, trange
 else:
     from tqdm import tqdm, trange
-    
+
 def entries_to_line(soup, fields):
     soup_elements = [soup.find(id=field) for field in fields]
     table_cells   = [element['value'] for element in soup_elements if 'value' in element.attrs]
@@ -34,22 +34,22 @@ if __name__ == '__main__':
         parser.set_defaults(owners=False, properties=False, merge=False)
         args   = parser.parse_args()
         parse_properties, parse_owners, merge_data = args.properties, args.owners, args.merge
-    
+
     data_dir   = f'{ROOT_DIR}/data/data_{CNTY_SFFX}'
     output_dir = f'{ROOT_DIR}/output/output_{CNTY_SFFX}'
     os.makedirs(output_dir, exist_ok=True)
-    
+
     output_fname_owners = f'{output_dir}/output_{CNTY_SFFX}_owners.json'
     output_fname_prop   = f'{output_dir}/output_{CNTY_SFFX}_prop.json'
-    
+
 
     if parse_properties:
         total_list = []
-    
+
         for fname in tqdm(sorted(glob.glob(f'{data_dir}/prop_*.html'))):
             with open(fname, 'r') as f:
                 html_text = f.read()
-            
+
             soup              = BeautifulSoup(html_text, 'lxml')
             prop_id           = int(soup.find(id="txtParcel")['value'])
             legal_description = entries_to_line(soup, [f"txtLegal{num}" for num in range(1, 5)])
@@ -67,9 +67,10 @@ if __name__ == '__main__':
             school            = potential_schools[-1][1:-1] if potential_schools else ''
             property_use      = soup.find(id="txtCatCode")['value']
             # ^---- decode it later, try the following sources after figuring out unique entries:
+            # https://comptroller.texas.gov/taxes/property-tax/docs/96-313.pdf
             # https://www.taxnetusa.com/research/texas/sptb.php
-            # file:///Users/tigrank/Downloads/denton15-16.pdf (page 24)
-            
+            # https://comptroller.texas.gov/taxes/property-tax/reappraisals/denton15-16.pdf
+
             prop_dict         = {
                                      'prop_id'          : prop_id,
                                      'legal_description': legal_description,
@@ -95,18 +96,18 @@ if __name__ == '__main__':
         if total_list:
             with open(output_fname_prop, 'w') as json_f:
                 json_f.write(json.dumps(total_list))
-    
+
     if parse_owners:
         total_list = []
-    
+
         for fname in tqdm(sorted(glob.glob(f'{data_dir}/owner_*.html'))):
             with open(fname, 'r') as f:
                 html_text = f.read()
-                
+
             soup        = BeautifulSoup(html_text, 'lxml')
             owner_id    = int(soup.find(id="txtOwnerID")['value'])
             delinq_flag = 'delinquent taxes due' in html_text
-            
+
             # parsing the tax table
             data       = []
             table_body = soup.find(id="DataGrid1")
@@ -115,19 +116,19 @@ if __name__ == '__main__':
                 cols = row.find_all('td')
                 cols = [ele.text.strip() for ele in cols]
                 data.append([ele for ele in cols if ele])
-                
+
             # fixing up html->table parsing problems
             data           = [[el for el in row if el not in ['Homestead', 'Receipt']] for row in data]
             df             = pd.DataFrame(data)
             df.columns     = df.iloc[0]
             df             = df[1:]
             df['owner_id'] = owner_id
-            df             = df.rename(columns={'Parcel ID': 'prop_id', 
-                                                'TotalPenalty & InterestAnd/Or Discount':'recent_penalty', 
+            df             = df.rename(columns={'Parcel ID': 'prop_id',
+                                                'TotalPenalty & InterestAnd/Or Discount':'recent_penalty',
                                                 'Tax Due':'recent_delinq'})
             df             = df[['owner_id', 'prop_id', 'recent_penalty', 'recent_delinq']]
             df.prop_id     = df.prop_id.astype(int)
-            
+
             for col in ['recent_penalty', 'recent_delinq']:
                 df[col] = df[col].map(lambda x: x.replace(',','')).astype(float)
 
@@ -135,20 +136,20 @@ if __name__ == '__main__':
                 df.recent_delinq = 0.0
 
             total_list.extend(df.to_dict('records'))
-            
+
         if total_list:
             with open(output_fname_owners, 'w') as json_f:
                 json_f.write(json.dumps(total_list))
-    
+
     if merge_data:
         df1            = pd.read_json(output_fname_prop)
         df2            = pd.read_json(output_fname_owners)
         df             = df1.merge(df2, on='prop_id', how='left')
         missing_owners = np.unique(df[df.owner_id.isna()].owner_name.values)
-        
+
         with open(f'{output_dir}/missing_owners.pkl', 'wb') as f:
             pkl.dump(missing_owners, f)
-        
+
         df.drop_duplicates(inplace=True)
         df.drop(columns=['owner_id'], inplace=True)
 
@@ -160,5 +161,5 @@ if __name__ == '__main__':
         node_name = platform.node()
         if re.match('ip\-\d+\-\d+\-\d+\-\d+\..*', node_name):
             aws_dir = '/var/www/html/output'
-            os.makedirs(aws_dir, exist_ok=True) 
+            os.makedirs(aws_dir, exist_ok=True)
             df.to_csv(f'{aws_dir}/output_{CNTY_SFFX}.csv', index=False)
