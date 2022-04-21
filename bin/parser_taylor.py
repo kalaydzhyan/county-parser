@@ -69,6 +69,8 @@ if __name__ == '__main__':
             imp_val_text = element.text
             if imp_val_text!='N/A':   # property already appraised
                 break
+            else:
+                imp_val_text='0'
             
         improvement_value = int(imp_val_text.replace('$','').replace(',',''))
         empty_land        = improvement_value < EMPTY_LIMIT
