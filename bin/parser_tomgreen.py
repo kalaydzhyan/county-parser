@@ -58,7 +58,7 @@ if __name__ == '__main__':
         if transfer_date and transfer_date.lower()!='n/a':
             transfer_date = datetime.datetime.strptime(transfer_date, "%m/%d/%Y").strftime('%Y-%m-%d')
 
-        absentee          = 'Homestead' in entries_to_line(soup, ["webprop_exemption"])
+        absentee          = 'Homestead' not in entries_to_line(soup, ["webprop_exemption"])
         imp_val           = float(entries_to_line(soup, ["histimp0_yr"]).replace(',',''))
         empty_land        = imp_val < EMPTY_LIMIT
         land_table        = soup.find(id="tableLnd").contents
