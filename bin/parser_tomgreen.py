@@ -16,7 +16,7 @@ else:
     from tqdm import tqdm, trange
 
 def clean_substrings(input_array):
-    bad_substrings = ['$', '&nbsp;', 'Situs: ', 'Legal: ']
+    bad_substrings = ['$', '&nbsp;', 'Situs: ', 'Legal: ', '<strong>', '</strong>']
     element = ' '.join([str(entry) for entry in input_array])
     for sub in bad_substrings:
         element = element.replace(sub, '')
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         imp_val           = float(entries_to_line(soup, ["histimp0_yr"]).replace(',',''))
         empty_land        = imp_val < EMPTY_LIMIT
         land_table        = soup.find(id="tableLnd").contents
-        land_area         = float(land_table[0].contents[1].contents[0]) if land_table else 0.0
+        land_area         = float(land_table[0].contents[1].contents[0].replace(',','') if land_table else 0.0
         property_use      = land_table[0].contents[0].contents[0] if (land_table and land_table[0].contents[0].contents) else ''
         potential_schools = re.findall('>[^<]* ISD[^<]*<', html_text)
         school            = potential_schools[-1][1:-1] if potential_schools else ''
@@ -73,12 +73,15 @@ if __name__ == '__main__':
         except FileNotFoundError:
             continue
 
+        if 'tableBills' not in html_text:
+            continue
+
         soup               = BeautifulSoup(html_text, 'lxml')
         tax_table          = soup.find(id="tableBills").contents[0].contents
-        add_fees           = float(tax_table[5].contents[0].replace('$','').replace(',', ''))
-        late_fees          = float(tax_table[6].contents[0].replace('$','').replace(',', ''))
+        add_fees           = float(clean_substrings([str(tax_table[5].contents[0])]).replace(',', ''))
+        late_fees          = float(clean_substrings([str(tax_table[6].contents[0])]).replace(',', ''))
         recent_penalty     = add_fees + late_fees
-        recent_delinquency = float(tax_table[7].contents[0].replace('$','').replace(',', ''))
+        recent_delinquency = float(clean_substrings([str(tax_table[7].contents[0])]).replace(',', ''))
 
         prop_dict          = {
                                  'prop_id'          : prop_id,
