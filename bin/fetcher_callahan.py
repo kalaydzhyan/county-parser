@@ -3,14 +3,16 @@ import zipfile, requests, os, tempfile
 import pandas as pd
 import datetime as dt
 import regex as re
+import numpy as np
 from cad_lib import ROOT_DIR
 
 if __name__ == '__main__':
-    
-    url      = 'https://callahancad.org/'
-    response = requests.get(url)
-    line     = re.findall('Tax Roll"[^>]*', response.text)[0]
-    url_tax  = re.findall('http.*zip', line)[0]
+
+    url            = 'https://callahancad.org/'
+    response       = requests.get(url)
+    tax_roll_lines = re.findall('<a[^>]*>[^>]*Tax Roll[^>]*', response.text)
+    line           = np.sort(tax_roll_lines)[-1]
+    url_tax        = re.findall('http.*zip', line)[0]
 
 ######### This functionality is not anymore supported by the county website ####
 #     today       = dt.datetime.today()
@@ -28,13 +30,13 @@ if __name__ == '__main__':
 #             url_tax = url+tax_filenames[-1]
 #             break
 ################################################################################
-    
+
     data_folder = f'{ROOT_DIR}/data/data_callahan'
     os.makedirs(data_folder, exist_ok=True)
-    
+
     for f in os.listdir(data_folder):
         os.remove(f'{data_folder}/{f}')
-    
+
     with tempfile.TemporaryFile() as tfile:
         response = requests.get(url_tax)
         tfile.write(response.content)
