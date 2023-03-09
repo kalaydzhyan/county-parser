@@ -62,8 +62,8 @@ if __name__ == '__main__':
         imp_val           = float(entries_to_line(soup, ["histimp0_yr"]).replace(',',''))
         empty_land        = imp_val < EMPTY_LIMIT
         land_table        = soup.find(id="tableLnd").contents
-        land_area         = float(land_table[0].contents[1].contents[0].replace(',','') if land_table else 0.0
-        property_use      = land_table[0].contents[0].contents[0] if (land_table and land_table[0].contents[0].contents) else ''
+        land_area         = float(land_table[0].contents[1].contents[0].replace(',','')) if land_table else 0.0
+        zoning            = str(land_table[0].contents[0].contents[0]) if (land_table and land_table[0].contents[0].contents) else ''
         potential_schools = re.findall('>[^<]* ISD[^<]*<', html_text)
         school            = potential_schools[-1][1:-1] if potential_schools else ''
 
@@ -93,8 +93,8 @@ if __name__ == '__main__':
                                  'absentee'         : absentee,
                                  'empty_land'       : empty_land,
                                  'improvement_value': int(imp_val),
-                                 'property_use'     : property_use,
-                                 'zoning'           : property_use,
+#                                 'property_use'     : property_use,
+                                 'zoning'           : zoning,
                                  'land_area'        : land_area,
 #                                     'land_dict'        : land_dict,
                                  'recent_penalty'   : recent_penalty,
