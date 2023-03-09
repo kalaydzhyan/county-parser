@@ -50,7 +50,6 @@ if __name__ == '__main__':
 
         legal_description = entries_to_line(soup, ["webprop_desc"])
         prop_address      = entries_to_line(soup, ["webprop_situs"])
-        #TODO: multiple owners
         owner_name        = entries_to_line(soup, ["webprop_name"])
         owner_address     = entries_to_line(soup, ["webprop_mailaddress"])
         sale_table        = soup.find(id='tableSale').contents
@@ -62,7 +61,6 @@ if __name__ == '__main__':
         absentee          = 'Homestead' in entries_to_line(soup, ["webprop_exemption"])
         imp_val           = float(entries_to_line(soup, ["histimp0_yr"]).replace(',',''))
         empty_land        = imp_val < EMPTY_LIMIT
-        #TODO: might have several rows
         land_table        = soup.find(id="tableLnd").contents
         land_area         = float(land_table[0].contents[1].contents[0]) if land_table else 0.0
         property_use      = land_table[0].contents[0].contents[0] if (land_table and land_table[0].contents[0].contents) else ''
