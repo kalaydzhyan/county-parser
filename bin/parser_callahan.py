@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import json, glob, platform, os, argparse, subprocess
+import pandas as pd
 import regex as re
 from cad_lib import isnotebook, ROOT_DIR, EMPTY_LIMIT
 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         match             = get_first_match('Mailing Address:', html_lines)
         address_array     = [address_line[1:-1].strip().replace('  ','') for address_line in re.findall('>[^>]+<', match)[1:]]
         owner_address     =', '.join([line for line in address_array if line])
-        
+
         try:
             match            = get_first_match('Deed Date', html_lines, offset=10)
             month, day, year = re.findall('>[^>]+<', match)[0][1:-1].split('/')
