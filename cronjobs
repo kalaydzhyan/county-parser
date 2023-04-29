@@ -1,6 +1,7 @@
 #!/usr/bin/crontab
 
 0  0  * * 0 /home/ec2-user/county-parser/bin/fetcher_runner_callahan.sh
+5  0  * * 0 /home/ec2-user/county-parser/bin/fetcher_callahan_old.py
 0  1  * * 0 /home/ec2-user/county-parser/bin/parser_callahan.py
 0  0  * * 1 /home/ec2-user/county-parser/bin/fetcher_runner_taylor.sh
 0  0  * * 2 /home/ec2-user/county-parser/bin/parser_taylor.py

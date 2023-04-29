@@ -63,20 +63,3 @@ if __name__ == '__main__':
         else:
             with open(fname, 'wb') as f:
                 f.write(response.content)
-
-    # Downloading tax records.
-    url            = 'https://callahancad.org/'
-    response       = requests.get(url)
-    tax_roll_lines = re.findall('<a[^>]*>[^>]*Tax Roll[^>]*', response.text)
-    line           = np.sort(tax_roll_lines)[-1]
-    url_tax        = re.findall('http.*zip', line)[0]
-
-    for f in os.listdir(data_folder):
-        if '.pdf' in f:
-            os.remove(f'{data_folder}/{f}')
-
-    with tempfile.TemporaryFile() as tfile:
-        response = requests.get(url_tax)
-        tfile.write(response.content)
-        with zipfile.ZipFile(tfile, "r") as zipf:
-            zipf.extractall(data_folder)
