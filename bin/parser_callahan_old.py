@@ -19,7 +19,7 @@ def fix_padding(string, move_from, move_to_tuple):
     buffer        = string[idx+1: idx+1+cell_len].strip()
     left_padding  = ' '*(move_to_tuple[0]-idx)
     right_padding = ' '*(cell_len-len(buffer))
-    
+
     return string[:idx]+left_padding+buffer+right_padding+string[move_to_tuple[1]:]
 
 def extract_name_address(string):
@@ -27,7 +27,7 @@ def extract_name_address(string):
     address_start = ('PO BOX', 'P O Box', '%', 'C/O', 'P. L.') + tuple(str(int('0')+i) for i in range(10))
     owner_name    = ''
     owner_address = ''
-    
+
     if string:
         lines        = string.split(', ')
         address_flag = False
@@ -35,25 +35,25 @@ def extract_name_address(string):
         for line in lines[1:]:
             if any(line.startswith(bad_content) for item in bad_content):
                 break
-                
+
             address_flag = line.startswith(address_start) or address_flag
-            
+
             if address_flag:
                 owner_address = owner_address + ', ' + line if owner_address else line
             else:
                 owner_name = owner_name + ' ' + line
-                
+
     return owner_name, owner_address
 
 def analyze_legal_description(string):
-    bad_items         = ['**', 'MAP NUM:', 'DIVIDED UNITS:', 'GEO QUAD:', 'AERIAL:'] 
+    bad_items         = ['**', 'MAP NUM:', 'DIVIDED UNITS:', 'GEO QUAD:', 'AERIAL:']
     delinquent        = '**' in string
     acres             = re.search('ACRES: [\d\.]*', string)
     land_area         = float(acres[0].split()[1].replace(',','')) if acres else -1.0
     idxs              = np.array([string.find(item) for item in bad_items])
     idxs              = idxs[idxs>=0]
     legal_description = string[:np.min(idxs)] if idxs.any() else string
-    
+
     return legal_description, land_area, delinquent
 
 
@@ -61,15 +61,15 @@ if __name__ == '__main__':
 
     output_dir = f'{ROOT_DIR}/output/output_{CNTY_SFFX}'
     os.makedirs(output_dir, exist_ok=True)
-    
+
     total_list = []
-    
+
     for fname in glob.glob(f'{ROOT_DIR}/data/data_{CNTY_SFFX}/*CALLAHAN*.pdf'):
         args   = ["ps2ascii", fname]
         res    = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = res.stdout.decode('utf-8')
         lines  = output.split('\n')
-        
+
         # extract all properties
         lines       = [line.strip('\r') for line in lines]
         first_lines = [i for i, line in enumerate(lines) if ' ID:' in line]
@@ -80,8 +80,8 @@ if __name__ == '__main__':
         # dictionary of properties, keeping only real property
         properties  = {idd: lines[slice(*ranges[i])] for i, idd in enumerate(ids) if 'R' in idd}
 
-        # find column positions 
-        keys = [key.strip() for key in lines[3].split('    ') if key]
+        # find column positions
+        keys = [key.strip() for key in lines[3].split('  ') if key]
         first_positions = [lines[3].find(key) for key in keys]
         last_positions  = first_positions[1:]+[None]
         positions = dict(zip(keys, zip(first_positions, last_positions)))
@@ -105,27 +105,27 @@ if __name__ == '__main__':
 
             accnt_id                  = prop_description['ACCOUNT IDENTIFICATION']
             prop_address              = ''
-            
+
             for inf_line in accnt_id.split(', '):
                 if inf_line.startswith('SITUS:'):
                     prop_address = inf_line.split(': ')[1]
                     break
-                
+
             owner_name, owner_address = extract_name_address(prop_description['OWNERSHIP'])
             absentee                  = 'HS' not in prop_description['EXEMPTIONS / ADDN CODING']
             legal_description, land_area, delinquent = analyze_legal_description(prop_description['LEGAL DESCRIPTION'])
             recent_delinquency        = float(prop_data[-1].split()[-1].replace(',', '')) if delinquent else 0
             property_use              = prop_description['PTD'] # TODO: find a table for these codes.
-            
+
             transfer_line = prop_description['EXEMPTIONS / ADDN CODING']
             try:
                 dt_idx        = transfer_line.find('DT: ')
                 transfer_date = transfer_line[dt_idx+4:]
                 transfer_date = transfer_date.split(',')[0]
                 transfer_date = datetime.datetime.strptime(transfer_date, "%m/%d/%Y").strftime('%Y-%m-%d')
-            except: 
+            except:
                 transfer_date = ''
-            
+
             # figuring out if the land is vacant or almost vacant
             val_dict = dict(zip(prop_description['TYPE'].split(', '), prop_description['VALUATION'].split(', ')))
             imp_val  = 0.0
@@ -133,7 +133,7 @@ if __name__ == '__main__':
             for prop_type in val_dict:
                 if 'IMP ' in prop_type:
                     imp_val += float(val_dict[prop_type].replace(',',''))
-                    
+
             empty_land        = imp_val < EMPTY_LIMIT
             school_candidates = re.findall('\d{4}[A-Z ]*ISD',''.join(prop_data))
             school            = school_candidates[-1][5:] if school_candidates else ''
@@ -169,5 +169,5 @@ if __name__ == '__main__':
         node_name = platform.node()
         if re.match('ip\-\d+\-\d+\-\d+\-\d+\..*', node_name):
             aws_dir = '/var/www/html/output'
-            os.makedirs(aws_dir, exist_ok=True) 
+            os.makedirs(aws_dir, exist_ok=True)
             df.to_csv(f'{aws_dir}/output_{CNTY_SFFX}.csv', index=False)
